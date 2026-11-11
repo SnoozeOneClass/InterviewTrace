@@ -1,0 +1,9 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/InterviewTrace.Core/InterviewTrace.Core.csproj" />
+    <Project Path="src/InterviewTrace.App/InterviewTrace.App.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/InterviewTrace.Smoke/InterviewTrace.Smoke.csproj" />
+  </Folder>
+</Solution>

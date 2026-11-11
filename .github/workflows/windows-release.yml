@@ -1,0 +1,42 @@
+name: Build Windows release
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - name: Check out release tag
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.release.tag_name }}
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@0f4a354dd5547a28c70b7853dbd95d5b67886e73 # v6
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Restore dependencies
+        run: dotnet restore InterviewTrace.slnx -r win-x64
+
+      - name: Run offline checks
+        run: dotnet run --project tests/InterviewTrace.Smoke/InterviewTrace.Smoke.csproj -c Release --no-restore
+
+      - name: Publish self-contained Windows app
+        run: dotnet publish src/InterviewTrace.App/InterviewTrace.App.csproj -c Release -r win-x64 --self-contained true --no-restore -o artifacts/InterviewTrace-win-x64
+
+      - name: Create release archive
+        shell: pwsh
+        run: Compress-Archive -Path artifacts/InterviewTrace-win-x64 -DestinationPath artifacts/InterviewTrace-win-x64.zip -CompressionLevel Optimal
+
+      - name: Attach archive to release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+        run: gh release upload "$env:RELEASE_TAG" artifacts/InterviewTrace-win-x64.zip --clobber
